@@ -65,6 +65,7 @@ contract Election {
     function startElection() public onlyOwner {
         require(s_hasStarted == false, "Already started!");
         s_hasStarted = true;
+        emptyCandidates();
         setCandidates();
         emit electionStarted();
     }
@@ -91,6 +92,10 @@ contract Election {
         for (uint256 i = 0; i < 5; i++) {
             s_candidates.push(Candidate({id: i + 1, name: "Name", votes: 0}));
         }
+    }
+
+    function emptyCandidates() private {
+        delete s_candidates;
     }
 
     // view / pure
