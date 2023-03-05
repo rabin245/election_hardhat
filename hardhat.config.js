@@ -25,9 +25,9 @@ module.exports = {
     deployer: {
       default: 0,
     },
-    user: {
-      default: 1,
-    },
+    // user: {
+    //   default: 1,
+    // },
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
