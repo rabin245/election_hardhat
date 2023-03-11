@@ -7,5 +7,8 @@
     "ethers": "^5.7.2",
     "hardhat": "^2.12.7",
     "hardhat-deploy": "^0.11.24"
+  },
+  "scripts": {
+    "node": "hardhat node"
   }
 }

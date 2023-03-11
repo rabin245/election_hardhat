@@ -60,26 +60,21 @@ contract Election {
     }
 
     // public
-    function startElection() public onlyOwner {
-        require(s_hasStarted == false, "Already started!");
+    function startElection() public onlyOwner electionHasNotStarted {
         s_hasStarted = true;
-        emit electionStarted();
+        clearVoterToCandidateId();
         emptyCandidates();
         setCandidates();
+        emit electionStarted();
     }
 
-    function endElection() public onlyOwner {
-        require(s_hasStarted == true, "Already ended!");
-        emit electionEnded();
+    function endElection() public onlyOwner electionHasStarted {
         s_hasStarted = false;
-    }
-
-    // not really needed right now
-    function addVoter() public {
-        s_voters.push(msg.sender);
+        emit electionEnded();
     }
 
     function voteToCandidate(uint256 id) public electionHasStarted onlyOnce {
+        s_voters.push(msg.sender);
         s_voterToCandidateId[msg.sender] = id;
         uint256 candidateIndex = getCandidateIndex(id);
         s_candidates[candidateIndex].votes++;
@@ -90,12 +85,7 @@ contract Election {
         uint256 id,
         string calldata name,
         string calldata partyName
-    )
-        public
-        // string calldata imageUrl
-        onlyOwner
-        electionHasNotStarted
-    {
+    ) public onlyOwner electionHasNotStarted {
         s_candidates.push(
             Candidate({
                 id: id,
@@ -124,7 +114,7 @@ contract Election {
 
     // private
     function setCandidates() private {
-        for (uint256 i = 0; i < 5; i++) {
+        for (uint256 i = 0; i < 9; i++) {
             s_candidates.push(
                 Candidate({
                     id: i + 1,
@@ -152,6 +142,13 @@ contract Election {
         revert Election__NoCandidateWithGivenId(id);
     }
 
+    function clearVoterToCandidateId() private {
+        for (uint256 i = 0; i < s_voters.length; i++) {
+            delete s_voterToCandidateId[s_voters[i]];
+        }
+        delete s_voters;
+    }
+
     // view / pure
     function hasVoted() public view returns (bool) {
         return s_voterToCandidateId[msg.sender] == 0 ? false : true;
@@ -169,6 +166,7 @@ contract Election {
         return (msg.sender, s_voterToCandidateId[msg.sender]);
     }
 
+    // dont need this as well
     function getVoters() public view returns (address[] memory) {
         return s_voters;
     }
@@ -177,6 +175,7 @@ contract Election {
         return s_candidates;
     }
 
+    // dont think we need this
     function getCandidate(
         uint256 id
     ) public view electionHasStarted returns (Candidate memory candidate) {
