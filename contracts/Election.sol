@@ -23,11 +23,15 @@ contract Election {
     address private immutable i_owner;
 
     // Events
-    event voteCasted(Candidate updatedCandidate);
+    event VoteCasted(Candidate updatedCandidate);
 
-    event electionStarted();
+    event ElectionStarted();
 
-    event electionEnded();
+    event ElectionEnded();
+
+    event CandidateAdded(Candidate candidate);
+
+    event CandidateRemoved(uint256 id);
 
     // Modifiers
     modifier onlyOwner() {
@@ -65,12 +69,12 @@ contract Election {
         clearVoterToCandidateId();
         emptyCandidates();
         setCandidates();
-        emit electionStarted();
+        emit ElectionStarted();
     }
 
     function endElection() public onlyOwner electionHasStarted {
         s_hasStarted = false;
-        emit electionEnded();
+        emit ElectionEnded();
     }
 
     function voteToCandidate(uint256 id) public electionHasStarted onlyOnce {
@@ -78,23 +82,24 @@ contract Election {
         s_voterToCandidateId[msg.sender] = id;
         uint256 candidateIndex = getCandidateIndex(id);
         s_candidates[candidateIndex].votes++;
-        emit voteCasted(s_candidates[candidateIndex]);
+        emit VoteCasted(s_candidates[candidateIndex]);
     }
 
-    function addCandidates(
+    function addCandidate(
         uint256 id,
         string calldata name,
         string calldata partyName
     ) public onlyOwner electionHasNotStarted {
-        s_candidates.push(
-            Candidate({
-                id: id,
-                name: name,
-                partyName: partyName,
-                imageUrl: "https://picsum.photos/400",
-                votes: 0
-            })
-        );
+        Candidate memory candidate = Candidate({
+            id: id,
+            name: name,
+            partyName: partyName,
+            imageUrl: "https://picsum.photos/800/525",
+            votes: 0
+        });
+
+        s_candidates.push(candidate);
+        emit CandidateAdded(candidate);
     }
 
     function removeCandidate(
@@ -106,6 +111,8 @@ contract Election {
             revert Election__NoCandidateWithGivenId(id);
         }
 
+        emit CandidateRemoved(id);
+
         for (uint256 i = delIndex; i < s_candidates.length - 1; i++) {
             s_candidates[i] = s_candidates[i + 1];
         }
@@ -114,13 +121,25 @@ contract Election {
 
     // private
     function setCandidates() private {
+        string[9] memory names = [
+            "Name1",
+            "Name2",
+            "Name3",
+            "Name4",
+            "Name5",
+            "Name6",
+            "Name7",
+            "Name8",
+            "Name9"
+        ];
+
         for (uint256 i = 0; i < 9; i++) {
             s_candidates.push(
                 Candidate({
                     id: i + 1,
-                    name: "Name",
+                    name: names[i],
                     partyName: "party",
-                    imageUrl: "https://picsum.photos/400",
+                    imageUrl: "https://picsum.photos/800/525",
                     votes: 0
                 })
             );
@@ -150,7 +169,7 @@ contract Election {
     }
 
     // view / pure
-    function hasVoted() public view returns (bool) {
+    function getHasVoted() public view returns (bool) {
         return s_voterToCandidateId[msg.sender] == 0 ? false : true;
     }
 
@@ -158,12 +177,8 @@ contract Election {
         return s_hasStarted;
     }
 
-    function getCurrentVoterToCandidateId()
-        public
-        view
-        returns (address, uint256)
-    {
-        return (msg.sender, s_voterToCandidateId[msg.sender]);
+    function getCurrentVoterToCandidateId() public view returns (uint256) {
+        return s_voterToCandidateId[msg.sender];
     }
 
     // dont need this as well
