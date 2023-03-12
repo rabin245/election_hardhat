@@ -61,14 +61,14 @@ contract Election {
     constructor() {
         i_owner = msg.sender;
         s_hasStarted = false;
+        setCandidates();
     }
 
     // public
     function startElection() public onlyOwner electionHasNotStarted {
         s_hasStarted = true;
         clearVoterToCandidateId();
-        emptyCandidates();
-        setCandidates();
+        // emptyCandidates();
         emit ElectionStarted();
     }
 
