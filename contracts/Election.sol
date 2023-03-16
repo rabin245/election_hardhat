@@ -21,6 +21,7 @@ contract Election {
     bool private s_hasStarted;
     mapping(address => uint256) private s_voterToCandidateId;
     address private immutable i_owner;
+    Candidate[] private s_recentResults;
 
     // Events
     event VoteCasted(Candidate updatedCandidate);
@@ -68,13 +69,16 @@ contract Election {
     function startElection() public onlyOwner electionHasNotStarted {
         s_hasStarted = true;
         clearVoterToCandidateId();
-        // emptyCandidates();
+        // clear voters
+        // reset the votes of all the candidates
         emit ElectionStarted();
+        removeRecentResults();
     }
 
     function endElection() public onlyOwner electionHasStarted {
         s_hasStarted = false;
         emit ElectionEnded();
+        saveRecentResults();
     }
 
     function voteToCandidate(uint256 id) public electionHasStarted onlyOnce {
@@ -140,7 +144,7 @@ contract Election {
                     name: names[i],
                     partyName: "party",
                     imageUrl: "https://picsum.photos/800/525",
-                    votes: 0
+                    votes: (i + 1) * 100
                 })
             );
         }
@@ -166,6 +170,14 @@ contract Election {
             delete s_voterToCandidateId[s_voters[i]];
         }
         delete s_voters;
+    }
+
+    function saveRecentResults() private {
+        s_recentResults = s_candidates;
+    }
+
+    function removeRecentResults() private {
+        delete s_recentResults;
     }
 
     // view / pure
@@ -202,5 +214,9 @@ contract Election {
             }
         }
         revert Election__NoCandidateWithGivenId(id);
+    }
+
+    function getRecentResults() public view returns (Candidate[] memory) {
+        return s_recentResults;
     }
 }
