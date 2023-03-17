@@ -37,6 +37,8 @@ contract Election {
 
     event CandidateRemoved(uint256 id);
 
+    event CandidateListEmptied();
+
     // Modifiers
     modifier onlyOwner() {
         require(msg.sender == i_owner, "You are not the owner!");
@@ -133,6 +135,11 @@ contract Election {
         s_candidates.pop();
     }
 
+    function emptyCandidates() public onlyOwner electionHasNotStarted {
+        delete s_candidates;
+        emit CandidateListEmptied();
+    }
+
     // private
     function setCandidates() private {
         string[9] memory names = [
@@ -158,10 +165,6 @@ contract Election {
                 })
             );
         }
-    }
-
-    function emptyCandidates() private {
-        delete s_candidates;
     }
 
     function getCandidateIndex(uint256 id) private view returns (uint256) {
