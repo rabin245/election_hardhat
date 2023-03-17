@@ -23,6 +23,9 @@ contract Election {
     address private immutable i_owner;
     Candidate[] private s_recentResults;
 
+    uint256[] private s_electionsTimeList;
+    mapping(uint256 => Candidate[]) private s_electionTimeToResults;
+
     // Events
     event VoteCasted(Candidate updatedCandidate);
 
@@ -66,19 +69,26 @@ contract Election {
     }
 
     // public
-    function startElection() public onlyOwner electionHasNotStarted {
+    function startElection(
+        uint256 electionTime
+    ) public onlyOwner electionHasNotStarted {
         s_hasStarted = true;
         clearVoterToCandidateId();
         // clear voters
         // reset the votes of all the candidates
         emit ElectionStarted();
         removeRecentResults();
+        addElectionTime(electionTime);
     }
 
     function endElection() public onlyOwner electionHasStarted {
         s_hasStarted = false;
         emit ElectionEnded();
         saveRecentResults();
+
+        uint256[] memory electionsTimeList = s_electionsTimeList;
+        uint256 lastIndex = electionsTimeList.length - 1;
+        saveElectionResult(electionsTimeList[lastIndex]);
     }
 
     function voteToCandidate(uint256 id) public electionHasStarted onlyOnce {
@@ -180,6 +190,14 @@ contract Election {
         delete s_recentResults;
     }
 
+    function addElectionTime(uint256 electionTime) private {
+        s_electionsTimeList.push(electionTime);
+    }
+
+    function saveElectionResult(uint256 electionTime) private {
+        s_electionTimeToResults[electionTime] = s_candidates;
+    }
+
     // view / pure
     function getHasVoted() public view returns (bool) {
         return s_voterToCandidateId[msg.sender] == 0 ? false : true;
@@ -218,5 +236,15 @@ contract Election {
 
     function getRecentResults() public view returns (Candidate[] memory) {
         return s_recentResults;
+    }
+
+    function getElectionsTimeList() public view returns (uint256[] memory) {
+        return s_electionsTimeList;
+    }
+
+    function getElectionTimeToResult(
+        uint256 electionTime
+    ) public view returns (Candidate[] memory) {
+        return s_electionTimeToResults[electionTime];
     }
 }
