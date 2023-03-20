@@ -76,21 +76,23 @@ contract Election {
     ) public onlyOwner electionHasNotStarted {
         s_hasStarted = true;
         clearVoterToCandidateId();
+        clearVotes();
         // clear voters
         // reset the votes of all the candidates
-        emit ElectionStarted();
         removeRecentResults();
         addElectionTime(electionTime);
+        emit ElectionStarted();
     }
 
     function endElection() public onlyOwner electionHasStarted {
         s_hasStarted = false;
-        emit ElectionEnded();
         saveRecentResults();
 
         uint256[] memory electionsTimeList = s_electionsTimeList;
         uint256 lastIndex = electionsTimeList.length - 1;
         saveElectionResult(electionsTimeList[lastIndex]);
+
+        emit ElectionEnded();
     }
 
     function voteToCandidate(uint256 id) public electionHasStarted onlyOnce {
@@ -104,13 +106,14 @@ contract Election {
     function addCandidate(
         uint256 id,
         string calldata name,
-        string calldata partyName
+        string calldata partyName,
+        string calldata imageUrl
     ) public onlyOwner electionHasNotStarted {
         Candidate memory candidate = Candidate({
             id: id,
             name: name,
             partyName: partyName,
-            imageUrl: "https://picsum.photos/800/525",
+            imageUrl: imageUrl,
             votes: 0
         });
 
@@ -123,16 +126,20 @@ contract Election {
     ) public onlyOwner electionHasNotStarted {
         uint256 delIndex = getCandidateIndex(id);
 
-        if (delIndex >= s_candidates.length) {
+        Candidate[] storage candidatesList = s_candidates;
+
+        if (delIndex >= candidatesList.length) {
             revert Election__NoCandidateWithGivenId(id);
         }
 
         emit CandidateRemoved(id);
 
-        for (uint256 i = delIndex; i < s_candidates.length - 1; i++) {
-            s_candidates[i] = s_candidates[i + 1];
+        for (uint256 i = delIndex; i < candidatesList.length - 1; i++) {
+            candidatesList[i] = candidatesList[i + 1];
         }
-        s_candidates.pop();
+        candidatesList.pop();
+
+        s_candidates = candidatesList;
     }
 
     function emptyCandidates() public onlyOwner electionHasNotStarted {
@@ -170,12 +177,19 @@ contract Election {
     function getCandidateIndex(uint256 id) private view returns (uint256) {
         Candidate[] memory candidatesList = s_candidates;
         for (uint256 i = 0; i < candidatesList.length; i++) {
-            Candidate memory cand = candidatesList[i];
-            if (cand.id == id) {
+            if (candidatesList[i].id == id) {
                 return i;
             }
         }
         revert Election__NoCandidateWithGivenId(id);
+    }
+
+    function clearVotes() private {
+        Candidate[] storage candidatesList = s_candidates;
+        for (uint256 i = 0; i < candidatesList.length; i++) {
+            candidatesList[i].votes = 0;
+        }
+        s_candidates = candidatesList;
     }
 
     function clearVoterToCandidateId() private {
@@ -214,27 +228,8 @@ contract Election {
         return s_voterToCandidateId[msg.sender];
     }
 
-    // dont need this as well
-    function getVoters() public view returns (address[] memory) {
-        return s_voters;
-    }
-
     function getCandidates() public view returns (Candidate[] memory) {
         return s_candidates;
-    }
-
-    // dont think we need this
-    function getCandidate(
-        uint256 id
-    ) public view electionHasStarted returns (Candidate memory candidate) {
-        Candidate[] memory candidatesList = s_candidates;
-        for (uint256 i = 0; i < candidatesList.length; i++) {
-            Candidate memory cand = candidatesList[i];
-            if (cand.id == id) {
-                return cand;
-            }
-        }
-        revert Election__NoCandidateWithGivenId(id);
     }
 
     function getRecentResults() public view returns (Candidate[] memory) {
