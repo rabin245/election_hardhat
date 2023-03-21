@@ -1,3 +1,5 @@
+const { network } = require("hardhat");
+
 module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
@@ -6,6 +8,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     from: deployer,
     args: [],
     log: true,
+    waitConfirmations: network.config.blockConfirmations,
   });
 
   console.log("Election deployed to:", election.address);
