@@ -67,7 +67,6 @@ contract Election {
     constructor() {
         i_owner = msg.sender;
         s_hasStarted = false;
-        setCandidates();
     }
 
     // public
@@ -148,32 +147,6 @@ contract Election {
     }
 
     // private
-    function setCandidates() private {
-        string[9] memory names = [
-            "Name1",
-            "Name2",
-            "Name3",
-            "Name4",
-            "Name5",
-            "Name6",
-            "Name7",
-            "Name8",
-            "Name9"
-        ];
-
-        for (uint256 i = 0; i < 9; i++) {
-            s_candidates.push(
-                Candidate({
-                    id: i + 1,
-                    name: names[i],
-                    partyName: "party",
-                    imageUrl: "https://picsum.photos/800/525",
-                    votes: (i + 1) * 100
-                })
-            );
-        }
-    }
-
     function getCandidateIndex(uint256 id) private view returns (uint256) {
         Candidate[] memory candidatesList = s_candidates;
         for (uint256 i = 0; i < candidatesList.length; i++) {
